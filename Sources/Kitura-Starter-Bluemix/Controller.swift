@@ -49,6 +49,9 @@ public class Controller {
 
     // JSON Get request
     router.get("/json", handler: getJSON)
+    
+    // JSON Hello world
+    router.get("/helloworld", handler: getHelloWorld)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -76,6 +79,13 @@ public class Controller {
     jsonResponse["company"].stringValue = "IBM"
     jsonResponse["organization"].stringValue = "Swift @ IBM"
     jsonResponse["location"].stringValue = "Austin, Texas"
+    try response.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  public func getHelloWorld(request: RouterRequest, response: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("GET - /json route handler...")
+    var jsonResponse = JSON([:])
+    jsonResponse["test"].stringValue = "HelloWorld"
     try response.status(.OK).send(json: jsonResponse).end()
   }
 
