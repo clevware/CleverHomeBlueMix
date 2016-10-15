@@ -18,6 +18,7 @@ import Kitura
 import SwiftyJSON
 import LoggerAPI
 import CloudFoundryEnv
+import Foundation
 
 public class Controller {
 
@@ -52,6 +53,8 @@ public class Controller {
     
     // JSON Hello world
     router.get("/helloworld", handler: getHelloWorld)
+    
+    router.post("/emotion", handler: emotionRecognization)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -87,7 +90,20 @@ public class Controller {
     Log.debug("GET - /json route handler...")
     var jsonResponse = JSON([:])
     jsonResponse["test"].stringValue = "HelloWorld"
+//    let url = "https://portalstoragewuprod.azureedge.net/emotion/recognition3-thumbnail.jpg"
+//    EmotionRecognition.getEmotion(from: url)
     try response.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  public func emotionRecognization(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("POST - /json route handler...")
+    var data = Data()
+    try request.read(into: &data)
+    EmotionRecognition.getEmotion(from: data) { (inData, inReponse) in
+      reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+      let jsonResponse = JSON(data: inData!)
+      try! reponse.status(.OK).send(json: jsonResponse).end()
+    }
   }
 
 }
