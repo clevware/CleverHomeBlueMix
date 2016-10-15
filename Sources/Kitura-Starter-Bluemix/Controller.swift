@@ -56,7 +56,9 @@ public class Controller {
     
     router.post("/emotion", handler: emotionRecognization)
     
-    router.post("/control-light", handler: controlLight)
+    router.get("/control-light", handler: controlLight)
+    
+    router.post("/light-brightness", handler: brightness)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -109,14 +111,32 @@ public class Controller {
   }
   
   public func controlLight(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
-    Log.debug("Get ")
-    let parameters = request.parameters
-    let lightid = parameters["id"]
-    let brightness = Double(parameters["brightness"]!)
+    Log.debug("Get")
+    let parameters = request.queryParameters
+    let lightid = parameters["id"]!
+    let brightness = Double(parameters["brightness"]!)!
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+    Database.shareInstance.lightsStatus[lightid] = (HardWareType.light, brightness)
     
     var jsonResponse = JSON([:])
     jsonResponse["result"] = "success"
     
+    try reponse.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  public func brightness(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("post")
+    let body = request.body!
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+    var jsonResponse = JSON([:])
+    switch body {
+    case let .json(json):
+        
+        let tuple = Database.shareInstance.lightsStatus[json["id"].stringValue]!
+        jsonResponse["value"].doubleValue = tuple.1
+    default:
+      jsonResponse["result"] = false
+    }
     try reponse.status(.OK).send(json: jsonResponse).end()
   }
 
