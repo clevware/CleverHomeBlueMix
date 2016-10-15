@@ -137,10 +137,10 @@ public class Controller {
     var jsonResponse = JSON([:])
     jsonResponse["value"].doubleValue = value
     
-    jsonResponse["hasTokenPhoto"].boolValue = Database.shareInstance.hasTokenPhoto
-    jsonResponse["happiness"].doubleValue = Database.shareInstance.happiness
-    jsonResponse["sadness"].doubleValue = Database.shareInstance.sadness
     if Database.shareInstance.hasTokenPhoto == true {
+      jsonResponse["hasTokenPhoto"].boolValue = Database.shareInstance.hasTokenPhoto
+      jsonResponse["happiness"].doubleValue = Database.shareInstance.happiness
+      jsonResponse["sadness"].doubleValue = Database.shareInstance.sadness
       Database.shareInstance.hasTokenPhoto = false
     }
     
@@ -161,19 +161,21 @@ public class Controller {
   
   public func getEmotion(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
     Log.debug("Get Emotion")
-    var jsonReponse = JSON([:])
-    let str = request.queryParameters["data"]
-    if let str = str, let data = str.data(using: .utf8) {
-      let json = JSON(data: data)
-      let emotion = json.arrayValue[0]["scores"]
-      let emotionMapper = EGMapper(json: emotion)
-      Database.shareInstance.happiness = emotionMapper.happiness
-      Database.shareInstance.sadness = emotionMapper.happiness
-      Database.shareInstance.hasTokenPhoto = true
-      jsonReponse["result"] = true
-    }else {
-      jsonReponse["result"] = false
+    if let happiness = request.queryParameters["happiness"], let sadness = request.queryParameters["sadness"] {
+      if let happiness = Double(happiness), let sadness = Double(sadness) {
+        Database.shareInstance.happiness = happiness
+        Database.shareInstance.happiness = sadness
+        Database.shareInstance.hasTokenPhoto = true
+        var jsonReponse = JSON([:])
+        jsonReponse["result"].stringValue = "success"
+        reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+        try reponse.status(.OK).send(json: jsonReponse).end()
+      }
     }
+    var jsonReponse = JSON([:])
+    jsonReponse["result"].stringValue = "failure"
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
     try reponse.status(.OK).send(json: jsonReponse).end()
+    
   }
 }
