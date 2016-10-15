@@ -67,6 +67,7 @@ public class Controller {
       try response.status(.OK).send("Hello \(name), from Kitura-Starter-Bluemix!").end()
     } else {
       try response.status(.OK).send("Kitura-Starter-Bluemix received a POST request!").end()
+      
     }
   }
 
