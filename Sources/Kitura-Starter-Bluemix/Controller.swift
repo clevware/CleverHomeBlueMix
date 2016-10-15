@@ -59,6 +59,8 @@ public class Controller {
     router.get("/control-light", handler: controlLight)
     
     router.post("/light-brightness", handler: brightness)
+    
+    router.post("/all-light-brightness", handler: allBrightness)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -126,17 +128,33 @@ public class Controller {
   
   public func brightness(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
     Log.debug("post")
-    let body = request.body!
+    let id = request.cookies["id"]!.value
+    let value = Database.shareInstance.lightsStatus[id]?.1 ?? 0
     reponse.headers["Content-Type"] = "application/json; charset=utf-8"
     var jsonResponse = JSON([:])
-    switch body {
-    case let .json(json):
-        
-        let tuple = Database.shareInstance.lightsStatus[json["id"].stringValue]!
-        jsonResponse["value"].doubleValue = tuple.1
-    default:
-      jsonResponse["result"] = false
+    jsonResponse["value"].doubleValue = value
+    
+//    switch body {
+//    case let .json(json):
+//        
+////        let tuple = Database.shareInstance.lightsStatus[json["id"].stringValue]!
+////        jsonResponse["value"].doubleValue = tuple.1
+//      jsonResponse["value"].doubleValue = 100
+//    default:
+//      jsonResponse["result"] = false
+//    }
+    try reponse.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  public func allBrightness(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("allBrightness post")
+    let allBrights = Database.shareInstance.lightsStatus
+    var dic:[String:Double] = [:]
+    for (key, (_, value)) in allBrights {
+      dic[key] = value
     }
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+    let jsonResponse = JSON(dic)
     try reponse.status(.OK).send(json: jsonResponse).end()
   }
 
