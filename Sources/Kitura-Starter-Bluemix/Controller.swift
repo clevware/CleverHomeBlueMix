@@ -61,6 +61,8 @@ public class Controller {
     router.post("/light-brightness", handler: brightness)
     
     router.post("/all-light-brightness", handler: allBrightness)
+    
+    router.post("/emotion-json", handler: getEmotion)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -103,19 +105,14 @@ public class Controller {
   
   public func emotionRecognization(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
     Log.debug("POST - /json route handler...")
-    let body = request.body!
-    var data = Data()
-    switch body {
-    case let .raw(adata):
-      data = adata
-    default:
-      return
+    if let body = request.body {
+      print("have body")
+    }else {
+      print("have no body")
     }
-    EmotionRecognition.getEmotion(from: data) { (inData, inReponse) in
-      reponse.headers["Content-Type"] = "application/json; charset=utf-8"
-      let jsonResponse = JSON(data: inData!)
-      try! reponse.status(.OK).send(json: jsonResponse).end()
-    }
+    var jsonRespone = JSON([:])
+    jsonRespone["hello"].stringValue = "world"
+    try! reponse.status(.OK).send(json: jsonRespone).end()
   }
   
   public func controlLight(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
@@ -164,5 +161,17 @@ public class Controller {
     try reponse.status(.OK).send(json: jsonResponse).end()
   }
   
-
+  public func getEmotion(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("Get Emotion")
+    var jsonReponse = JSON([:])
+    if let body = request.body {
+      print("have body")
+      jsonReponse["has-body"].boolValue = true
+    }else {
+      print("have no body")
+      jsonReponse["has-body"].boolValue = false
+    }
+    try reponse.status(.OK).send(json: jsonReponse).end()
+    
+  }
 }
