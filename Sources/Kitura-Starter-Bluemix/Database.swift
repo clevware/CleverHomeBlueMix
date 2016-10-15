@@ -17,6 +17,10 @@ class Database {
   
   var lightsStatus: [String: (HardWareType, Double)] = [:]
   
+  var happiness: Double = 0
+  var sadness: Double = 0
+  var hasTokenPhoto = false
+  
   private init() { }
   
 }

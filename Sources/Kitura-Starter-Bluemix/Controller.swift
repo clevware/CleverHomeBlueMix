@@ -62,7 +62,7 @@ public class Controller {
     
     router.post("/all-light-brightness", handler: allBrightness)
     
-    router.post("/emotion-json", handler: getEmotion)
+    router.get("/emotion-json", handler: getEmotion)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -105,7 +105,7 @@ public class Controller {
   
   public func emotionRecognization(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
     Log.debug("POST - /json route handler...")
-    if let body = request.body {
+    if let _ = request.body {
       print("have body")
     }else {
       print("have no body")
@@ -137,15 +137,13 @@ public class Controller {
     var jsonResponse = JSON([:])
     jsonResponse["value"].doubleValue = value
     
-//    switch body {
-//    case let .json(json):
-//        
-////        let tuple = Database.shareInstance.lightsStatus[json["id"].stringValue]!
-////        jsonResponse["value"].doubleValue = tuple.1
-//      jsonResponse["value"].doubleValue = 100
-//    default:
-//      jsonResponse["result"] = false
-//    }
+    jsonResponse["hasTokenPhoto"].boolValue = Database.shareInstance.hasTokenPhoto
+    jsonResponse["happiness"].doubleValue = Database.shareInstance.happiness
+    jsonResponse["sadness"].doubleValue = Database.shareInstance.sadness
+    if Database.shareInstance.hasTokenPhoto == true {
+      Database.shareInstance.hasTokenPhoto = false
+    }
+    
     try reponse.status(.OK).send(json: jsonResponse).end()
   }
   
@@ -164,14 +162,18 @@ public class Controller {
   public func getEmotion(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
     Log.debug("Get Emotion")
     var jsonReponse = JSON([:])
-    if let body = request.body {
-      print("have body")
-      jsonReponse["has-body"].boolValue = true
+    let str = request.queryParameters["data"]
+    if let str = str, let data = str.data(using: .utf8) {
+      let json = JSON(data: data)
+      let emotion = json.arrayValue[0]["scores"]
+      let emotionMapper = EGMapper(json: emotion)
+      Database.shareInstance.happiness = emotionMapper.happiness
+      Database.shareInstance.sadness = emotionMapper.happiness
+      Database.shareInstance.hasTokenPhoto = true
+      jsonReponse["result"] = true
     }else {
-      print("have no body")
-      jsonReponse["has-body"].boolValue = false
+      jsonReponse["result"] = false
     }
     try reponse.status(.OK).send(json: jsonReponse).end()
-    
   }
 }
