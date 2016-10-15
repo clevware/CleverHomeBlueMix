@@ -55,6 +55,8 @@ public class Controller {
     router.get("/helloworld", handler: getHelloWorld)
     
     router.post("/emotion", handler: emotionRecognization)
+    
+    router.post("/control-light", handler: controlLight)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -104,6 +106,18 @@ public class Controller {
       let jsonResponse = JSON(data: inData!)
       try! reponse.status(.OK).send(json: jsonResponse).end()
     }
+  }
+  
+  public func controlLight(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("Get ")
+    let parameters = request.parameters
+    let lightid = parameters["id"]
+    let brightness = Double(parameters["brightness"]!)
+    
+    var jsonResponse = JSON([:])
+    jsonResponse["result"] = "success"
+    
+    try reponse.status(.OK).send(json: jsonResponse).end()
   }
 
 }
