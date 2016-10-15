@@ -18,6 +18,7 @@ import Kitura
 import SwiftyJSON
 import LoggerAPI
 import CloudFoundryEnv
+import Foundation
 
 public class Controller {
 
@@ -52,6 +53,14 @@ public class Controller {
     
     // JSON Hello world
     router.get("/helloworld", handler: getHelloWorld)
+    
+    router.post("/emotion", handler: emotionRecognization)
+    
+    router.get("/control-light", handler: controlLight)
+    
+    router.post("/light-brightness", handler: brightness)
+    
+    router.post("/all-light-brightness", handler: allBrightness)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -87,7 +96,66 @@ public class Controller {
     Log.debug("GET - /json route handler...")
     var jsonResponse = JSON([:])
     jsonResponse["test"].stringValue = "HelloWorld"
+//    let url = "https://portalstoragewuprod.azureedge.net/emotion/recognition3-thumbnail.jpg"
+//    EmotionRecognition.getEmotion(from: url)
     try response.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  public func emotionRecognization(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("POST - /json route handler...")
+    var data = Data()
+    try request.read(into: &data)
+    EmotionRecognition.getEmotion(from: data) { (inData, inReponse) in
+      reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+      let jsonResponse = JSON(data: inData!)
+      try! reponse.status(.OK).send(json: jsonResponse).end()
+    }
+  }
+  
+  public func controlLight(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("Get")
+    let parameters = request.queryParameters
+    let lightid = parameters["id"]!
+    let brightness = Double(parameters["brightness"]!)!
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+    Database.shareInstance.lightsStatus[lightid] = (HardWareType.light, brightness)
+    
+    var jsonResponse = JSON([:])
+    jsonResponse["result"] = "success"
+    
+    try reponse.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  public func brightness(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("post")
+    let id = request.cookies["id"]!.value
+    let value = Database.shareInstance.lightsStatus[id]?.1 ?? 0
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+    var jsonResponse = JSON([:])
+    jsonResponse["value"].doubleValue = value
+    
+//    switch body {
+//    case let .json(json):
+//        
+////        let tuple = Database.shareInstance.lightsStatus[json["id"].stringValue]!
+////        jsonResponse["value"].doubleValue = tuple.1
+//      jsonResponse["value"].doubleValue = 100
+//    default:
+//      jsonResponse["result"] = false
+//    }
+    try reponse.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  public func allBrightness(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("allBrightness post")
+    let allBrights = Database.shareInstance.lightsStatus
+    var dic:[String:Double] = [:]
+    for (key, (_, value)) in allBrights {
+      dic[key] = value
+    }
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+    let jsonResponse = JSON(dic)
+    try reponse.status(.OK).send(json: jsonResponse).end()
   }
 
 }
