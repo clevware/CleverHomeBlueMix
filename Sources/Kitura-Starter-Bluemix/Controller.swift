@@ -63,6 +63,8 @@ public class Controller {
     router.post("/all-light-brightness", handler: allBrightness)
     
     router.get("/emotion-json", handler: getEmotion)
+    
+    router.get("/ruff-brightness", handler: ruffBrightness)
   }
 
   public func getHello(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -154,6 +156,32 @@ public class Controller {
     try reponse.status(.OK).send(json: jsonResponse).end()
   }
   
+  public func ruffBrightness(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
+    Log.debug("post")
+    let id = request.queryParameters["id"]!
+    let value = Database.shareInstance.lightsStatus[id]?.1 ?? 0
+    reponse.headers["Content-Type"] = "application/json; charset=utf-8"
+    var jsonResponse = JSON([:])
+    
+    if Database.shareInstance.hasTokenPhoto == true {
+      jsonResponse["hasTokenPhoto"].boolValue = Database.shareInstance.hasTokenPhoto
+      jsonResponse["happiness"].doubleValue = Database.shareInstance.happiness
+      jsonResponse["sadness"].doubleValue = Database.shareInstance.sadness
+      let happiness = Database.shareInstance.happiness
+      let saidness = Database.shareInstance.sadness
+      if happiness > saidness {
+        Database.shareInstance.lightsStatus[id] = (.light, 100)
+      }else {
+        Database.shareInstance.lightsStatus[id] = (.light, 0)
+      }
+      Database.shareInstance.hasTokenPhoto = false
+    }
+    jsonResponse["value"].doubleValue = value
+    
+    try reponse.status(.OK).send(json: jsonResponse).end()
+  }
+  
+  
   public func allBrightness(request: RouterRequest, reponse: RouterResponse, next: @escaping ()-> Void) throws {
     Log.debug("allBrightness post")
     let allBrights = Database.shareInstance.lightsStatus
@@ -185,4 +213,7 @@ public class Controller {
     try reponse.status(.OK).send(json: jsonReponse).end()
     
   }
+  
+  
+  
 }
