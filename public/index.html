@@ -22,12 +22,34 @@
     <link rel="stylesheet" type="text/css" href="static/css/style.css" />
     <link rel="stylesheet" type="text/css" href="static/css/font-awesome.css" />
     <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:700,300' rel='stylesheet' type='text/css' />
-    <!--<link rel="shortcut icon" href="static/image/favicon.ico">-->
-    <!--<link rel="shortcut icon" href="static/image/favicon.ico">-->
+    <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript">
+        function sendLightState()
+        {
+            var xmlhttp;
+            if (window.XMLHttpRequest)
+            {// code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp=new XMLHttpRequest();
+            }
+            else
+            {// code for IE6, IE5
+                xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            }
+
+//            xmlhttp.open("GET","https://clevho.mybluemix.net?id=1",true);
+            if(document.getElementById("switcher").checked){
+                xmlhttp.open("GET","/control-light?id=1&brightness=100",true);
+                xmlhttp.send();
+            }else {
+                xmlhttp.open("GET","/control-light?id=1&brightness=0",true);
+                xmlhttp.send();
+            }
+        }
+    </script>
 </head>
 <body>
 <div class="switch demo4" >
-    <input type="checkbox">
+    <input id="switcher" type="checkbox" onclick="sendLightState()">
     <label><i class="icon-off"></i></label>
 </div>
 </body>
