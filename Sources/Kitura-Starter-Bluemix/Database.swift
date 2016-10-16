@@ -21,6 +21,9 @@ class Database {
   var sadness: Double = 0
   var hasTokenPhoto = false
   
-  private init() { }
+  private init() {
+    lightsStatus = [:]
+    lightsStatus["1"] = (.light, 0)
+  }
   
 }
