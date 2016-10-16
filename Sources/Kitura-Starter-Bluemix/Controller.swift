@@ -135,14 +135,21 @@ public class Controller {
     let value = Database.shareInstance.lightsStatus[id]?.1 ?? 0
     reponse.headers["Content-Type"] = "application/json; charset=utf-8"
     var jsonResponse = JSON([:])
-    jsonResponse["value"].doubleValue = value
     
     if Database.shareInstance.hasTokenPhoto == true {
       jsonResponse["hasTokenPhoto"].boolValue = Database.shareInstance.hasTokenPhoto
       jsonResponse["happiness"].doubleValue = Database.shareInstance.happiness
       jsonResponse["sadness"].doubleValue = Database.shareInstance.sadness
+      let happiness = Database.shareInstance.happiness
+      let saidness = Database.shareInstance.sadness
+      if happiness > saidness {
+        Database.shareInstance.lightsStatus[id] = (.light, 100)
+      }else {
+        Database.shareInstance.lightsStatus[id] = (.light, 0)
+      }
       Database.shareInstance.hasTokenPhoto = false
     }
+    jsonResponse["value"].doubleValue = value
     
     try reponse.status(.OK).send(json: jsonResponse).end()
   }
